@@ -60,6 +60,7 @@ function segment(x1, z1, x2, z2) {
 function resetGame() {
   state.running = false;
   state.ended = false;
+  state.score = 0;
   state.lastTime = 0;
   state.muzzleFlash = 0;
   state.hitFlash = 0;
@@ -200,9 +201,9 @@ function updateOpponent(dt) {
   const facingPlayer = Math.atan2(player.x - opponent.x, player.z - opponent.z);
   const playerInSight = Math.abs(wrapAngle(facingPlayer - state.player.angle + Math.PI)) < 1.25;
   if (dist < 18 && state.opponentCooldown <= 0 && hasLineOfSight(opponent, player)) {
-    state.opponentCooldown = 0.9 + Math.random() * 0.7;
+    state.opponentCooldown = 1.25 + Math.random() * 0.85;
     spawnImpact(player.x, player.z, "#ff4f70");
-    state.player.health -= playerInSight ? 8 : 11;
+    state.player.health -= playerInSight ? 5 : 7;
     state.hitFlash = 1;
   }
 }
