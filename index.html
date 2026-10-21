@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Arena One - 3D Shooter</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="game-title">
+        <p class="eyebrow">Browser Arena FPS</p>
+        <h1 id="game-title">Arena One</h1>
+        <p class="tagline">
+          A fast first-person arena duel against one computer opponent.
+          Use the arrow keys to move and turn. Press space to fire.
+        </p>
+      </section>
+
+      <section class="game-card" aria-label="Arena One game">
+        <div class="hud">
+          <div>
+            <span class="label">Player</span>
+            <strong id="player-health">100</strong>
+          </div>
+          <div>
+            <span class="label">Opponent</span>
+            <strong id="opponent-health">100</strong>
+          </div>
+          <div>
+            <span class="label">Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <button id="restart-button" type="button">Restart</button>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="game" width="960" height="540" aria-label="Playable first person arena shooter"></canvas>
+          <div id="message" class="message">
+            <strong>Arena One</strong>
+            <span>Click Start, then use arrow keys and space bar.</span>
+            <button id="start-button" type="button">Start Game</button>
+          </div>
+        </div>
+
+        <div class="controls" aria-label="Game controls">
+          <span><kbd>↑</kbd> move forward</span>
+          <span><kbd>↓</kbd> move back</span>
+          <span><kbd>←</kbd><kbd>→</kbd> turn</span>
+          <span><kbd>Space</kbd> shoot</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
