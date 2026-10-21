@@ -26,7 +26,7 @@ const state = {
   player: {
     x: 0,
     z: 10,
-    angle: -Math.PI / 2,
+    angle: Math.PI,
     health: 100,
   },
   opponent: {
@@ -66,7 +66,7 @@ function resetGame() {
   state.hitFlash = 0;
   state.shotCooldown = 0;
   state.opponentCooldown = 0;
-  state.player = { x: 0, z: 10, angle: -Math.PI / 2, health: 100 };
+  state.player = { x: 0, z: 10, angle: Math.PI, health: 100 };
   state.opponent = { x: 0, z: -8, health: 100, strafe: 1, nextStrafe: 0 };
   state.particles = [];
   updateHud();
@@ -371,17 +371,79 @@ function opponentToRenderable() {
   return {
     depth: base.depth,
     draw() {
-      ctx.fillStyle = "#ff4f70";
-      ctx.shadowColor = "#ff4f70";
-      ctx.shadowBlur = 18;
-      ctx.fillRect(base.x - width / 2, head.y, width, height);
-      ctx.fillStyle = "#ffd166";
+      const x = base.x;
+      const top = head.y;
+      const bottom = base.y;
+      const torsoTop = top + height * 0.32;
+      const torsoBottom = bottom - height * 0.08;
+      const glow = Math.sin(performance.now() / 150) * 0.2 + 0.8;
+
+      ctx.save();
+      ctx.shadowColor = "#ff123f";
+      ctx.shadowBlur = 24 * glow;
+
+      ctx.fillStyle = "rgba(40, 0, 18, 0.78)";
       ctx.beginPath();
-      ctx.arc(base.x, head.y + height * 0.16, width * 0.35, 0, Math.PI * 2);
+      ctx.moveTo(x - width * 0.9, torsoTop);
+      ctx.lineTo(x - width * 1.35, bottom);
+      ctx.lineTo(x + width * 1.35, bottom);
+      ctx.lineTo(x + width * 0.9, torsoTop);
+      ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(base.x - width * 0.34, head.y + height * 0.44, width * 0.68, 5);
+
+      const armor = ctx.createLinearGradient(x - width, top, x + width, bottom);
+      armor.addColorStop(0, "#3a0d25");
+      armor.addColorStop(0.5, "#0a0d1f");
+      armor.addColorStop(1, "#050509");
+      ctx.fillStyle = armor;
+      ctx.beginPath();
+      ctx.moveTo(x, torsoTop - height * 0.08);
+      ctx.lineTo(x - width * 0.68, torsoTop);
+      ctx.lineTo(x - width * 0.42, torsoBottom);
+      ctx.lineTo(x + width * 0.42, torsoBottom);
+      ctx.lineTo(x + width * 0.68, torsoTop);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 18, 63, 0.9)";
+      ctx.lineWidth = Math.max(2, width * 0.06);
+      ctx.beginPath();
+      ctx.moveTo(x, torsoTop);
+      ctx.lineTo(x, torsoBottom);
+      ctx.moveTo(x - width * 0.42, torsoTop + height * 0.18);
+      ctx.lineTo(x + width * 0.42, torsoTop + height * 0.18);
+      ctx.stroke();
+
+      ctx.fillStyle = "#15111f";
+      ctx.beginPath();
+      ctx.ellipse(x, top + height * 0.19, width * 0.48, height * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#0a0610";
+      ctx.beginPath();
+      ctx.moveTo(x - width * 0.28, top + height * 0.08);
+      ctx.lineTo(x - width * 0.86, top - height * 0.08);
+      ctx.lineTo(x - width * 0.44, top + height * 0.22);
+      ctx.closePath();
+      ctx.moveTo(x + width * 0.28, top + height * 0.08);
+      ctx.lineTo(x + width * 0.86, top - height * 0.08);
+      ctx.lineTo(x + width * 0.44, top + height * 0.22);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#ff123f";
+      ctx.shadowColor = "#ff4968";
+      ctx.shadowBlur = 18 * glow;
+      ctx.fillRect(x - width * 0.24, top + height * 0.17, width * 0.15, Math.max(2, height * 0.025));
+      ctx.fillRect(x + width * 0.09, top + height * 0.17, width * 0.15, Math.max(2, height * 0.025));
+
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = "#1f2638";
+      ctx.fillRect(x + width * 0.48, torsoTop + height * 0.06, width * 0.72, height * 0.13);
+      ctx.fillStyle = "#ff123f";
+      ctx.fillRect(x + width * 1.08, torsoTop + height * 0.08, width * 0.2, height * 0.08);
+
+      ctx.restore();
     },
   };
 }
