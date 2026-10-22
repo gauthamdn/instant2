@@ -36,6 +36,7 @@ const state = {
     strafe: 1,
     nextStrafe: 0,
   },
+  opponentShots: [],
   particles: [],
 };
 
@@ -68,6 +69,7 @@ function resetGame() {
   state.opponentCooldown = 0;
   state.player = { x: 0, z: 10, angle: Math.PI, health: 100 };
   state.opponent = { x: 0, z: -8, health: 100, strafe: 1, nextStrafe: 0 };
+  state.opponentShots = [];
   state.particles = [];
   updateHud();
   showMessage("Arena One", "Click Start, then use arrow keys and space bar.", "Start Game");
@@ -153,6 +155,7 @@ function update(dt) {
   state.hitFlash = Math.max(0, state.hitFlash - dt * 4);
 
   updateOpponent(dt);
+  updateOpponentShots(dt);
   updateParticles(dt);
   updateHud();
 
@@ -202,6 +205,7 @@ function updateOpponent(dt) {
   const playerInSight = Math.abs(wrapAngle(facingPlayer - state.player.angle + Math.PI)) < 1.25;
   if (dist < 18 && state.opponentCooldown <= 0 && hasLineOfSight(opponent, player)) {
     state.opponentCooldown = 1.25 + Math.random() * 0.85;
+    spawnOpponentShot(opponent);
     spawnImpact(player.x, player.z, "#ff4f70");
     state.player.health -= playerInSight ? 5 : 7;
     state.hitFlash = 1;
@@ -244,6 +248,7 @@ function drawScene() {
     ...walls.flatMap((wall) => wallToRenderables(wall)),
     ...pillars.map((pillar) => pillarToRenderable(pillar)),
     opponentToRenderable(),
+    ...state.opponentShots.map((shot) => opponentShotToRenderable(shot)),
     ...state.particles.map((particle) => particleToRenderable(particle)),
   ]
     .filter(Boolean)
@@ -448,6 +453,49 @@ function opponentToRenderable() {
   };
 }
 
+function opponentShotToRenderable(shot) {
+  const origin = project(shot.x, shot.z, shot.y);
+  if (!origin) {
+    return null;
+  }
+
+  return {
+    depth: origin.depth,
+    draw() {
+      const alpha = clamp(shot.life / shot.maxLife, 0, 1);
+      const targetX = canvas.width / 2 + shot.jitterX * (1 - alpha);
+      const targetY = canvas.height / 2 + shot.jitterY * (1 - alpha);
+      const beam = ctx.createLinearGradient(origin.x, origin.y, targetX, targetY);
+      beam.addColorStop(0, `rgba(255, 18, 63, ${alpha})`);
+      beam.addColorStop(0.55, `rgba(255, 209, 102, ${alpha * 0.9})`);
+      beam.addColorStop(1, `rgba(255, 18, 63, ${alpha * 0.1})`);
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.strokeStyle = beam;
+      ctx.lineWidth = Math.max(3, 14 * alpha);
+      ctx.shadowColor = "#ff123f";
+      ctx.shadowBlur = 26 * alpha;
+      ctx.beginPath();
+      ctx.moveTo(origin.x, origin.y);
+      ctx.lineTo(targetX, targetY);
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(255, 18, 63, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(origin.x, origin.y, Math.max(3, 12 * alpha), 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(255, 18, 63, ${alpha * 0.75})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(targetX, targetY, 24 * (1.1 - alpha), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+}
+
 function particleToRenderable(particle) {
   const point = project(particle.x, particle.z, particle.y);
   if (!point) {
@@ -544,6 +592,25 @@ function spawnImpact(x, z, color) {
       vy: 1 + Math.random() * 2,
     });
   }
+}
+
+function spawnOpponentShot(opponent) {
+  state.opponentShots.push({
+    x: opponent.x + opponent.strafe * 0.45,
+    z: opponent.z,
+    y: 1.9,
+    life: 0.5,
+    maxLife: 0.5,
+    jitterX: (Math.random() - 0.5) * 54,
+    jitterY: (Math.random() - 0.5) * 38,
+  });
+}
+
+function updateOpponentShots(dt) {
+  for (const shot of state.opponentShots) {
+    shot.life -= dt;
+  }
+  state.opponentShots = state.opponentShots.filter((shot) => shot.life > 0);
 }
 
 function updateParticles(dt) {
